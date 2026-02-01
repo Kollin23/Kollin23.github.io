@@ -1,7 +1,7 @@
 ---
 import { Image } from "astro:assets";
-import htb-logo from "../../public/htb-logo.png";
-import thm-logo from "../../public/thm-logo.png";
+import htbLogo from "../../public/htb-logo.png";
+import thmLogo from "../../public/thm-logo.png";
 import moviesfordevs from "../../public/moviesfordevs.png";
 import velez from "../../public/velez.png";
 
@@ -16,14 +16,14 @@ interface Project {
 const projects: Project[] = [
   {
     title: "HackTheBox",
-    image: htb-logo as ImageMetadata,
+    image: htbLogo as ImageMetadata,
     link: "https://www.hackthebox.com/",
     preview: "https://www.hackthebox.com/",
     status: "0",
   },
   {
     title: "TryHackMe",
-    image: thm-logo as ImageMetadata,
+    image: thmLogo as ImageMetadata,
     link: "https://tryhackme.com/p/Kollin23",
     preview: "https://tryhackme.com/p/Kollin23",
     status: "1",
