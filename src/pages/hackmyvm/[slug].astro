@@ -1,0 +1,19 @@
+---
+import WriteupLayout from "../../components/WriteupLayout.astro";
+import { hackmyvmMachines } from "../../data/hackmyvm";
+
+export async function getStaticPaths() {
+  return hackmyvmMachines.map((machine) => ({
+    params: { slug: machine.slug },
+    props: { machine },
+  }));
+}
+
+const { machine } = Astro.props;
+---
+
+<WriteupLayout
+  machine={{ ...machine, platform: "hackmyvm" }}
+  backHref="/hackmyvm"
+  backLabel="HackMyVM"
+/>

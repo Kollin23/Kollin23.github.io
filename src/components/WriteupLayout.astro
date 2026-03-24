@@ -1,0 +1,375 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+interface MitreEntry {
+  id: string;
+  name: string;
+  description: string;
+}
+
+interface Mitigation {
+  title: string;
+  description: string;
+  priority: string;
+}
+
+interface PrivescStep {
+  title: string;
+  description: string;
+  code: string;
+}
+
+interface Props {
+  machine: {
+    name: string;
+    slug: string;
+    difficulty: string;
+    os: string;
+    platform: string;
+    writeup: {
+      title: string;
+      platform: string;
+      author: string;
+      authorUrl: string;
+      summary: string;
+      objectives: string[];
+      environment: { vms: string[]; topology: string; prerequisites: string[] };
+      scope: string;
+      enumeration: {
+        network: { command: string; result: string }[];
+        services: string[];
+        additional: { command: string; result: string }[];
+      };
+      exploitation: { steps: { title: string; description: string; code: string }[] };
+      postExploitation: {
+        collection: string[];
+        privesc: PrivescStep[];
+        lateral: string[];
+      };
+      persistence: { methods: string[]; techniques: string[] };
+      exfiltration: { type: string; method: string } | null;
+      mitre: MitreEntry[];
+      mitigations: Mitigation[];
+      lessons: { worked: string[]; improve: string[] };
+      screenshots: string[];
+    };
+  };
+  backHref: string;
+  backLabel: string;
+}
+
+const { machine, backHref, backLabel } = Astro.props;
+const w = machine.writeup;
+
+const priorityColor: Record<string, string> = {
+  Critical: "text-red-400 border-red-400/30 bg-red-400/5",
+  High: "text-orange-400 border-orange-400/30 bg-orange-400/5",
+  Medium: "text-yellow-400 border-yellow-400/30 bg-yellow-400/5",
+  Low: "text-green-400 border-green-400/30 bg-green-400/5",
+};
+
+const difficultyColor: Record<string, string> = {
+  Easy: "text-green-400",
+  Medium: "text-yellow-400",
+  Hard: "text-red-400",
+  Insane: "text-purple-400",
+};
+---
+
+<Layout title={`${w.title} — ${w.platform}`}>
+  <div class="max-w-4xl mx-auto py-16 pb-24">
+    <!-- Back link -->
+    <a
+      href={backHref}
+      class="inline-flex items-center gap-2 text-[var(--white-icon)] hover:text-white transition duration-200 mb-10 text-sm border border-[var(--white-icon-tr)] px-4 py-2 rounded-full bg-[#1414149c] hover:bg-[var(--white-icon-tr)]"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4">
+        <path d="M7.82843 10.9999H20V12.9999H7.82843L13.1924 18.3638L11.7782 19.778L4 11.9999L11.7782 4.22168L13.1924 5.63589L7.82843 10.9999Z"></path>
+      </svg>
+      {backLabel}
+    </a>
+
+    <!-- Header -->
+    <div class="border-b border-[#ffffff10] pb-8 mb-10">
+      <div class="flex flex-wrap items-center gap-3 mb-3">
+        <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-[var(--sec)] text-black">
+          {w.platform}
+        </span>
+        <span class={`text-xs font-semibold px-2.5 py-1 rounded-full bg-[var(--white-icon-tr)] ${difficultyColor[machine.difficulty] ?? "text-white"}`}>
+          {machine.difficulty}
+        </span>
+        <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-[var(--white-icon-tr)] text-[var(--white-icon)]">
+          {machine.os}
+        </span>
+      </div>
+      <h1 class="text-4xl md:text-5xl font-semibold text-[var(--white)] mb-2">{w.title}</h1>
+      <p class="text-[var(--white-icon)] text-sm">
+        By <a href={w.authorUrl} target="_blank" class="text-[var(--sec)] hover:underline">{w.author}</a>
+      </p>
+    </div>
+
+    <!-- Executive Summary -->
+    <section class="mb-10">
+      <h2 class="text-lg text-[var(--sec)] mb-2 shiny-sec">Resumen ejecutivo</h2>
+      <p class="text-[var(--white)] leading-relaxed">{w.summary}</p>
+    </section>
+
+    <!-- Objectives -->
+    <section class="mb-10">
+      <h2 class="text-lg text-[var(--sec)] mb-3 shiny-sec">Objetivos de aprendizaje</h2>
+      <ul class="space-y-2">
+        {w.objectives.map((obj) => (
+          <li class="flex items-start gap-2 text-[var(--white)]">
+            <span class="text-[var(--sec)] mt-0.5 flex-shrink-0">▸</span>
+            {obj}
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <!-- Environment -->
+    <section class="mb-10">
+      <h2 class="text-lg text-[var(--sec)] mb-3 shiny-sec">Entorno y prerrequisitos</h2>
+      <div class="rounded-2xl border border-[#ffffff10] bg-[#1414149c] p-5 space-y-4">
+        <div>
+          <p class="text-xs text-[var(--white-icon)] uppercase tracking-widest mb-2">VMs utilizadas</p>
+          <ul class="space-y-1">
+            {w.environment.vms.map((vm) => (
+              <li class="text-[var(--white)] text-sm flex items-center gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-[var(--sec)] flex-shrink-0"></span>
+                {vm}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <p class="text-xs text-[var(--white-icon)] uppercase tracking-widest mb-1">Topología</p>
+          <p class="text-[var(--white)] text-sm">{w.environment.topology}</p>
+        </div>
+        <div>
+          <p class="text-xs text-[var(--white-icon)] uppercase tracking-widest mb-2">Requisitos</p>
+          <div class="flex flex-wrap gap-1.5">
+            {w.environment.prerequisites.map((p) => (
+              <span class="text-xs px-2 py-0.5 rounded-md bg-[var(--white-icon-tr)] text-[var(--white-icon)] border border-[var(--white-icon-tr)]">
+                {p}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Scope -->
+    <section class="mb-10">
+      <h2 class="text-lg text-[var(--sec)] mb-2 shiny-sec">Alcance y reglas</h2>
+      <p class="text-[var(--white)] leading-relaxed text-sm">{w.scope}</p>
+    </section>
+
+    <!-- Enumeration -->
+    <section class="mb-10">
+      <h2 class="text-lg text-[var(--sec)] mb-4 shiny-sec">Enumeración (reconocimiento)</h2>
+
+      {w.enumeration.network.map((scan) => (
+        <div class="mb-4">
+          <p class="text-xs text-[var(--white-icon)] mb-1 uppercase tracking-widest">Escaneo de red</p>
+          <pre class="rounded-xl bg-[#0a0a0a] border border-[#ffffff10] p-4 text-sm text-green-400 overflow-x-auto whitespace-pre-wrap"><code>{scan.command}</code></pre>
+          <pre class="rounded-xl bg-[#0a0a0a] border border-[#ffffff10] p-4 text-sm text-[var(--white-icon)] overflow-x-auto whitespace-pre-wrap mt-2"><code>{scan.result}</code></pre>
+        </div>
+      ))}
+
+      <div class="mb-4">
+        <p class="text-xs text-[var(--white-icon)] mb-2 uppercase tracking-widest">Servicios encontrados</p>
+        <ul class="space-y-1">
+          {w.enumeration.services.map((svc) => (
+            <li class="text-[var(--white)] text-sm flex items-start gap-2">
+              <span class="text-[var(--sec)] flex-shrink-0 mt-0.5">▸</span>
+              {svc}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {w.enumeration.additional.length > 0 && (
+        <div>
+          <p class="text-xs text-[var(--white-icon)] mb-1 uppercase tracking-widest">Descubrimiento adicional</p>
+          {w.enumeration.additional.map((extra) => (
+            <div class="mb-3">
+              <pre class="rounded-xl bg-[#0a0a0a] border border-[#ffffff10] p-4 text-sm text-green-400 overflow-x-auto whitespace-pre-wrap"><code>{extra.command}</code></pre>
+              <pre class="rounded-xl bg-[#0a0a0a] border border-[#ffffff10] p-4 text-sm text-[var(--white-icon)] overflow-x-auto whitespace-pre-wrap mt-2"><code>{extra.result}</code></pre>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+
+    <!-- Exploitation -->
+    <section class="mb-10">
+      <h2 class="text-lg text-[var(--sec)] mb-4 shiny-sec">Explotación (acceso inicial)</h2>
+      <div class="space-y-6">
+        {w.exploitation.steps.map((step, i) => (
+          <div class="border-l-2 border-[var(--sec)]/40 pl-5">
+            <p class="text-xs text-[var(--white-icon)] uppercase tracking-widest mb-1">Paso {i + 1}</p>
+            <h3 class="text-[var(--white)] font-semibold mb-1">{step.title}</h3>
+            <p class="text-[var(--white-icon)] text-sm mb-3">{step.description}</p>
+            <pre class="rounded-xl bg-[#0a0a0a] border border-[#ffffff10] p-4 text-sm text-green-400 overflow-x-auto whitespace-pre-wrap"><code>{step.code}</code></pre>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- Post-exploitation -->
+    <section class="mb-10">
+      <h2 class="text-lg text-[var(--sec)] mb-4 shiny-sec">Post-explotación y movimiento lateral</h2>
+      <div class="space-y-4">
+        {w.postExploitation.collection.length > 0 && (
+          <div>
+            <p class="text-xs text-[var(--white-icon)] uppercase tracking-widest mb-2">Recolección de información</p>
+            <ul class="space-y-1">
+              {w.postExploitation.collection.map((item) => (
+                <li class="flex items-start gap-2 text-[var(--white)] text-sm">
+                  <span class="text-[var(--sec)] flex-shrink-0 mt-0.5">▸</span>{item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {w.postExploitation.privesc.length > 0 && (
+          <div>
+            <p class="text-xs text-[var(--white-icon)] uppercase tracking-widest mb-3">Escalada de privilegios</p>
+            {w.postExploitation.privesc.map((pe) => (
+              <div class="border-l-2 border-orange-400/40 pl-5 mb-4">
+                <h3 class="text-[var(--white)] font-semibold mb-1">{pe.title}</h3>
+                <p class="text-[var(--white-icon)] text-sm mb-3">{pe.description}</p>
+                <pre class="rounded-xl bg-[#0a0a0a] border border-[#ffffff10] p-4 text-sm text-green-400 overflow-x-auto whitespace-pre-wrap"><code>{pe.code}</code></pre>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {w.postExploitation.lateral.length > 0 && (
+          <div>
+            <p class="text-xs text-[var(--white-icon)] uppercase tracking-widest mb-2">Movimiento lateral</p>
+            <ul class="space-y-1">
+              {w.postExploitation.lateral.map((item) => (
+                <li class="flex items-start gap-2 text-[var(--white)] text-sm">
+                  <span class="text-[var(--sec)] flex-shrink-0 mt-0.5">▸</span>{item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    </section>
+
+    <!-- Persistence -->
+    <section class="mb-10">
+      <h2 class="text-lg text-[var(--sec)] mb-3 shiny-sec">Persistencia y evasión</h2>
+      <ul class="space-y-1">
+        {w.persistence.methods.map((m) => (
+          <li class="flex items-start gap-2 text-[var(--white)] text-sm">
+            <span class="text-[var(--sec)] flex-shrink-0 mt-0.5">▸</span>{m}
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <!-- Exfiltration -->
+    {w.exfiltration && (
+      <section class="mb-10">
+        <h2 class="text-lg text-[var(--sec)] mb-3 shiny-sec">Exfiltración</h2>
+        <div class="rounded-2xl border border-[#ffffff10] bg-[#1414149c] p-5 space-y-2 text-sm text-[var(--white)]">
+          <p><span class="text-[var(--white-icon)]">Tipo: </span>{w.exfiltration.type}</p>
+          <p><span class="text-[var(--white-icon)]">Método: </span>{w.exfiltration.method}</p>
+        </div>
+      </section>
+    )}
+
+    <!-- MITRE ATT&CK -->
+    <section class="mb-10">
+      <h2 class="text-lg text-[var(--sec)] mb-4 shiny-sec">Mapeo a MITRE ATT&CK</h2>
+      <div class="space-y-3">
+        {w.mitre.map((entry) => (
+          <div class="rounded-xl border border-[#ffffff10] bg-[#1414149c] p-4 flex gap-4">
+            <a
+              href={`https://attack.mitre.org/techniques/${entry.id.replace(".", "/")}`}
+              target="_blank"
+              class="text-[var(--sec)] font-mono font-semibold text-sm flex-shrink-0 hover:underline"
+            >
+              {entry.id}
+            </a>
+            <div>
+              <p class="text-[var(--white)] font-semibold text-sm">{entry.name}</p>
+              <p class="text-[var(--white-icon)] text-xs mt-0.5">{entry.description}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- Mitigations -->
+    <section class="mb-10">
+      <h2 class="text-lg text-[var(--sec)] mb-4 shiny-sec">Mitigaciones y recomendaciones</h2>
+      <div class="space-y-3">
+        {w.mitigations.map((m) => (
+          <div class={`rounded-xl border p-4 ${priorityColor[m.priority] ?? "border-white/10 bg-white/5 text-white"}`}>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="font-semibold text-sm">{m.title}</span>
+              <span class="text-xs px-2 py-0.5 rounded-full border ml-auto">{m.priority}</span>
+            </div>
+            <p class="text-xs opacity-80 leading-relaxed">{m.description}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- Lessons Learned -->
+    <section class="mb-10">
+      <h2 class="text-lg text-[var(--sec)] mb-4 shiny-sec">Lecciones aprendidas</h2>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="rounded-xl border border-green-400/20 bg-green-400/5 p-4">
+          <p class="text-xs text-green-400 uppercase tracking-widest mb-2">✓ Qué funcionó</p>
+          <ul class="space-y-1">
+            {w.lessons.worked.map((item) => (
+              <li class="text-[var(--white)] text-sm flex items-start gap-2">
+                <span class="text-green-400 flex-shrink-0 mt-0.5">▸</span>{item}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div class="rounded-xl border border-orange-400/20 bg-orange-400/5 p-4">
+          <p class="text-xs text-orange-400 uppercase tracking-widest mb-2">⚡ Qué mejorar</p>
+          <ul class="space-y-1">
+            {w.lessons.improve.map((item) => (
+              <li class="text-[var(--white)] text-sm flex items-start gap-2">
+                <span class="text-orange-400 flex-shrink-0 mt-0.5">▸</span>{item}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Screenshots -->
+    {w.screenshots.length > 0 && (
+      <section class="mb-10">
+        <h2 class="text-lg text-[var(--sec)] mb-4 shiny-sec">Archivos adjuntos</h2>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {w.screenshots.map((src) => (
+            <a href={src} target="_blank" class="rounded-xl overflow-hidden border border-[#ffffff10] hover:border-[var(--sec)]/50 transition">
+              <img src={src} alt="Screenshot" class="w-full h-32 object-cover hover:scale-105 transition-transform duration-300" />
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+  </div>
+</Layout>
+
+<style>
+  .shiny-sec {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--sec);
+  }
+</style>

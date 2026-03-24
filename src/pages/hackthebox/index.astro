@@ -1,0 +1,68 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import MachineCard from "../../components/MachineCard.astro";
+import { hacktheboxMachines } from "../../data/hackthebox";
+---
+
+<Layout title="HackTheBox — Kollin23">
+  <section class="py-12 border-t border-[#ffffff10] text-[var(--white)]">
+    <div class="max-w-5xl mx-auto">
+
+      <!-- Back link -->
+      <a
+        href="/"
+        class="inline-flex items-center gap-2 text-[var(--white-icon)] hover:text-white transition duration-200 mb-10 text-sm border border-[var(--white-icon-tr)] px-4 py-2 rounded-full bg-[#1414149c] hover:bg-[var(--white-icon-tr)]"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4">
+          <path d="M7.82843 10.9999H20V12.9999H7.82843L13.1924 18.3638L11.7782 19.778L4 11.9999L11.7782 4.22168L13.1924 5.63589L7.82843 10.9999Z"></path>
+        </svg>
+        Portfolio
+      </a>
+
+      <!-- Header -->
+      <h2 class="text-lg text-[var(--sec)] mb-2 shiny-sec">Plataforma</h2>
+      <h3 class="text-4xl md:text-5xl font-medium mb-3">HackTheBox</h3>
+      <p class="text-[var(--white-icon)] mb-10 max-w-xl">
+        Máquinas retiradas de HackTheBox. Write-ups detallados con reconocimiento, explotación y post-explotación.
+      </p>
+
+      <!-- Machine count badge -->
+      <div class="flex items-center gap-3 mb-8">
+        <span class="text-sm px-3 py-1 rounded-full bg-[#9fef00]/10 text-[#9fef00] border border-[#9fef00]/20 font-semibold">
+          {hacktheboxMachines.length} {hacktheboxMachines.length === 1 ? "máquina" : "máquinas"}
+        </span>
+      </div>
+
+      <!-- Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {hacktheboxMachines.map((machine) => (
+          <MachineCard
+            name={machine.name}
+            slug={machine.slug}
+            difficulty={machine.difficulty}
+            os={machine.os}
+            image={machine.image}
+            tags={machine.tags}
+            platform="hackthebox"
+          />
+        ))}
+      </div>
+
+      <!-- Empty state -->
+      {hacktheboxMachines.length === 0 && (
+        <div class="text-center py-24 text-[var(--white-icon)]">
+          <p class="text-2xl font-semibold mb-2">Próximamente</p>
+          <p class="text-sm">Los write-ups se irán añadiendo progresivamente.</p>
+        </div>
+      )}
+
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .shiny-sec {
+    color: var(--sec);
+    font-weight: 600;
+  }
+</style>

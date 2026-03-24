@@ -1,0 +1,122 @@
+---
+interface Props {
+  name: string;
+  slug: string;
+  difficulty: string;
+  os: string;
+  image: string;
+  tags: string[];
+  platform: "hackthebox" | "tryhackme" | "hackmyvm";
+}
+
+const { name, slug, difficulty, os, image, tags, platform } = Astro.props;
+
+const platformConfig = {
+  hackthebox: {
+    label: "HackTheBox",
+    color: "bg-[#9fef00]/10 text-[#9fef00] border-[#9fef00]/20",
+    badge: "bg-[#9fef00] text-black",
+    accent: "#9fef00",
+  },
+  tryhackme: {
+    label: "TryHackMe",
+    color: "bg-[#c11111]/10 text-[#ff6b6b] border-[#c11111]/20",
+    badge: "bg-[#c11111] text-white",
+    accent: "#ff6b6b",
+  },
+  hackmyvm: {
+    label: "HackMyVM",
+    color: "bg-[#4f8ef7]/10 text-[#4f8ef7] border-[#4f8ef7]/20",
+    badge: "bg-[#4f8ef7] text-white",
+    accent: "#4f8ef7",
+  },
+};
+
+const difficultyColor: Record<string, string> = {
+  Easy: "text-green-400 bg-green-400/10 border-green-400/20",
+  Medium: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20",
+  Hard: "text-red-400 bg-red-400/10 border-red-400/20",
+  Insane: "text-purple-400 bg-purple-400/10 border-purple-400/20",
+};
+
+const osIcon: Record<string, string> = {
+  Linux: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="inline w-3.5 h-3.5 mr-1 opacity-70"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>`,
+  Windows: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="inline w-3.5 h-3.5 mr-1 opacity-70"><path d="M3 12V6.75l6-1.32v6.57H3zm17-9v8.75l-10 .15V5.21L20 3zM3 13h6v6.43l-6-1.29V13zm17 .25V22l-10-1.9V13.1l10 .15z"/></svg>`,
+};
+
+const cfg = platformConfig[platform];
+---
+
+<div class="group">
+  <a href={`/${platform}/${slug}`} class="block">
+    <div
+      class="rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 mb-4 relative"
+    >
+      <!-- Platform badge -->
+      <span
+        class={`absolute top-3 left-3 z-10 text-xs font-semibold px-2.5 py-1 rounded-full ${cfg.badge}`}
+      >
+        {cfg.label}
+      </span>
+
+      <!-- Difficulty badge -->
+      <span
+        class={`absolute top-3 right-3 z-10 text-xs font-semibold px-2.5 py-1 rounded-full border ${difficultyColor[difficulty] ?? "text-white bg-white/10 border-white/20"}`}
+      >
+        {difficulty}
+      </span>
+
+      <!-- Machine image -->
+      <img
+        src={image}
+        alt={name}
+        class="w-full h-56 md:h-72 object-contain bg-[#0d0d0d] p-6 md:p-8 group-hover:scale-105 transition-transform duration-300"
+        onerror="this.src='/machines/placeholder.png'; this.onerror=null;"
+      />
+
+      <!-- Gradient overlay -->
+      <div
+        class="absolute inset-0 bg-gradient-to-t from-[#101010] via-transparent to-transparent opacity-70"
+      ></div>
+    </div>
+
+    <div class="flex items-start px-3">
+      <div class="flex-grow">
+        <h4 class="text-2xl font-semibold text-[var(--white)]">{name}</h4>
+        <p class="py-1 text-sm text-[var(--white-icon)] flex items-center">
+          <Fragment set:html={osIcon[os] ?? ""} />
+          {os} · {difficulty}
+        </p>
+
+        <!-- Tags -->
+        <div class="flex flex-wrap gap-1.5 mt-2">
+          {
+            tags.map((tag) => (
+              <span class="text-xs px-2 py-0.5 rounded-md bg-[var(--white-icon-tr)] text-[var(--white-icon)] border border-[var(--white-icon-tr)]">
+                {tag}
+              </span>
+            ))
+          }
+        </div>
+      </div>
+
+      <!-- Arrow icon -->
+      <div class="ml-4 mt-1 flex-shrink-0">
+        <span
+          class="size-10 flex justify-center items-center text-[var(--white-icon)] hover:text-white transition duration-300 ease-in-out border border-[var(--white-icon-tr)] rounded-xl bg-[#1414149c] hover:bg-[var(--white-icon-tr)]"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            class="size-5"
+          >
+            <path
+              d="M16.0037 9.41421L7.39712 18.0208L5.98291 16.6066L14.5895 8H7.00373V6H18.0037V17H16.0037V9.41421Z"
+            ></path>
+          </svg>
+        </span>
+      </div>
+    </div>
+  </a>
+</div>
